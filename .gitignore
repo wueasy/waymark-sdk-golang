@@ -1,0 +1,40 @@
+# Go
+backend/*.exe
+sdk/**/*.exe
+*.test
+coverage.out
+backend/*.db
+backend/*.db-journal
+backend/*.db-wal
+backend/*.db-shm
+backend/data/
+
+# Node
+node_modules/
+frontend/dist/
+
+# Java / Maven
+target/
+
+# 构建产物
+release/
+build/
+
+# 环境变量
+.env
+.env.*
+!.env.example
+
+# IDE / 编辑器
+.idea/
+.vscode/
+*.iml
+
+# 系统文件
+Thumbs.db
+.DS_Store
+
+# 日志
+*.log
+
+# 注：后端内嵌的前端副本 backend/internal/web/dist 需随仓库提交，勿加入忽略。
