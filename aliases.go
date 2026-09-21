@@ -55,6 +55,11 @@ func IsForbidden(err error) bool {
 	return apierr.IsForbidden(err)
 }
 
+// IsNotFound 判断错误是否为资源不存在（如配置尚未发布）。
+func IsNotFound(err error) bool {
+	return apierr.IsNotFound(err)
+}
+
 // 公共数据模型。
 type (
 	// RoleBrief 角色精简信息。

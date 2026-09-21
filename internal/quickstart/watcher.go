@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/wueasy/waymark-sdk-golang/internal/apierr"
 	"github.com/wueasy/waymark-sdk-golang/internal/cache"
 	"github.com/wueasy/waymark-sdk-golang/internal/config"
 	"github.com/wueasy/waymark-sdk-golang/internal/model"
@@ -79,6 +80,11 @@ func NewConfigWatcher(c *transport.Client, ctx context.Context, opts ConfigWatch
 	for _, dataId := range dataIds {
 		item, err := config.GetConfig(c, runCtx, w.namespace, w.group, dataId)
 		if err != nil {
+			// 配置尚未发布属正常情况：不报错、不回调，保持订阅等待后续发布通知。
+			if apierr.IsNotFound(err) {
+				c.Logger().Infof("waymark: 配置 %s 尚未发布，等待变更通知", dataId)
+				continue
+			}
 			cancel()
 			c.Logger().Errorf("waymark: 加载配置 %s 失败: %v", dataId, err)
 			return nil, fmt.Errorf("waymark: 加载配置 %s 失败: %w", dataId, err)
@@ -133,6 +139,11 @@ func (w *ConfigWatcher) handleEvent(ctx context.Context, ev model.Event) {
 	defer cancel()
 	item, err := config.GetConfig(w.client, callCtx, w.namespace, w.group, dataId)
 	if err != nil {
+		// 配置在事件到达后被删除时视为未发布：不报错，保持订阅。
+		if apierr.IsNotFound(err) {
+			w.client.Logger().Infof("waymark: 配置 %s 尚未发布，等待变更通知", dataId)
+			return
+		}
 		if ctx.Err() == nil {
 			w.client.Logger().Errorf("waymark: 拉取变更配置 %s 失败: %v", dataId, err)
 			reportError(w.onError, fmt.Errorf("waymark: 拉取变更配置 %s 失败: %w", dataId, err))

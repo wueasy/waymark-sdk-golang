@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 )
 
 // 服务端统一返回码。
@@ -56,4 +57,17 @@ func IsForbidden(err error) bool {
 // IsAuthError 判断错误是否需要重新登录。
 func IsAuthError(err error) bool {
 	return IsUnauthorized(err)
+}
+
+// IsNotFound 判断错误是否为资源不存在（如配置尚未发布）。服务端对不存在的资源返回业务失败，
+// 错误信息中带有“不存在”；返回码为 404（HTTP 或业务码）时同样视为不存在。
+func IsNotFound(err error) bool {
+	var e *APIError
+	if errors.As(err, &e) {
+		if e.Code == http.StatusNotFound || e.HTTPStatus == http.StatusNotFound {
+			return true
+		}
+		return strings.Contains(e.Msg, "不存在")
+	}
+	return false
 }
